@@ -1,0 +1,75 @@
+{% extends "pages/base_adminlte.html" %}
+
+{% block title %}Gestion des enseignants{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item">Enseignants</li>
+{% endblock %}
+
+{% block breadcrumb_active %}Gestion{% endblock %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title"><i class="fas fa-chalkboard-user"></i> Enseignants</h3>
+        <a class="btn btn-primary btn-sm" href="{% url 'enseignant_add' %}">
+          <i class="fas fa-plus"></i> Ajouter enseignant
+        </a>
+      </div>
+      <div class="card-body table-responsive p-0">
+        {% if users %}
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Email</th>
+              <th class="text-center">Staff</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td>{{ u.username }}</td>
+              <td>{{ u.email }}</td>
+              <td class="text-center">
+                {% if u.is_staff %}
+                  <span class="badge bg-success"><i class="fas fa-check"></i> Oui</span>
+                {% else %}
+                  <span class="badge bg-secondary"><i class="fas fa-times"></i> Non</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% if request.user != u %}
+                  <form method="post" action="{% url 'enseignant_toggle_staff' u.id %}" style="display:inline-block">
+                    {% csrf_token %}
+                    <button class="btn btn-sm {% if u.is_staff %}btn-warning{% else %}btn-info{% endif %}" type="submit">
+                      {% if u.is_staff %}
+                        <i class="fas fa-arrow-down"></i> Rétrograder
+                      {% else %}
+                        <i class="fas fa-arrow-up"></i> Promouvoir
+                      {% endif %}
+                    </button>
+                  </form>
+                {% else %}
+                  <span class="text-muted"><small>—</small></span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="p-3 text-center text-muted">
+          <p class="mb-0">Aucun enseignant trouvé</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

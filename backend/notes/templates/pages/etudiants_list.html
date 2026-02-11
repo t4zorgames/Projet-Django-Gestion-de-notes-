@@ -1,0 +1,250 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Liste des étudiants{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fas fa-home"></i> Accueil</a></li>
+    <li class="breadcrumb-item active"><i class="fas fa-users"></i> Étudiants</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <h1 class="d-inline"><i class="fas fa-users"></i> Étudiants</h1>
+  <a class="btn btn-primary float-end" href="{% url 'etudiant_add' %}"><i class="fas fa-plus"></i> Ajouter</a>
+</div>
+<form method="get" class="filter-section">
+  <h3><i class="fas fa-filter"></i> Filtrer les étudiants</h3>
+  
+  <div class="row g-3">
+    <div class="col-lg-4 col-md-6">
+      <label class="form-label">Département</label>
+      <select id="departement-select" class="form-select" name="departement">
+        <option value="">-- Sélectionner --</option>
+        {% for d in departements %}
+          <option value="{{ d.id }}" {% if d.id == selected_departement %}selected{% endif %}>{{ d.nom }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="col-lg-4 col-md-6">
+      <label class="form-label">Filière</label>
+      <select id="filiere-select" class="form-select" name="filiere">
+        <option value="">-- Sélectionner --</option>
+        {% for f in filieres %}
+          <option value="{{ f.id }}" {% if f.id == selected_filiere %}selected{% endif %}>{{ f.nom }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="col-lg-4 col-md-6">
+      <label class="form-label">Niveau</label>
+      <select id="niveau-select" class="form-select" name="niveau">
+        <option value="">-- Sélectionner --</option>
+        {% for n in niveaux %}
+          <option value="{{ n.id }}" {% if n.id == selected_niveau %}selected{% endif %}>{{ n.nom }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="col-lg-4 col-md-6">
+      <label class="form-label">Semestre</label>
+      <select id="semester-select" class="form-select" name="semester">
+        <option value="1" {% if selected_semester == 1 %}selected{% endif %}>Semestre 1</option>
+        <option value="2" {% if selected_semester == 2 %}selected{% endif %}>Semestre 2</option>
+      </select>
+    </div>
+    
+    <div class="col-lg-4 col-md-6">
+      <label class="form-label">UE (optionnelle)</label>
+      <select id="ue-select" class="form-select" name="ue">
+        <option value="">-- Sélectionner --</option>
+        {% for u in ues %}
+          <option value="{{ u.id }}" {% if u.id == selected_ue %}selected{% endif %}>{{ u.code }} - {{ u.nom }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="col-lg-4 col-md-6">
+      <label class="form-label">Trier par</label>
+      <select id="sort-select" class="form-select" name="sort">
+        <option value="nom" {% if sort == 'nom' %}selected{% endif %}>Nom</option>
+        <option value="matricule" {% if sort == 'matricule' %}selected{% endif %}>Matricule</option>
+        {% if selected_ue %}
+          <option value="note" {% if sort == 'note' %}selected{% endif %}>Note (UE sélectionnée)</option>
+        {% endif %}
+      </select>
+    </div>
+  </div>
+  
+  <div class="filter-actions">
+    <button type="submit" class="btn btn-light"><i class="fas fa-search"></i> Appliquer les filtres</button>
+    {% if user.is_staff and selected_niveau and selected_ue %}
+      <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#importModal"><i class="fas fa-upload"></i> Importer</button>
+      <a class="btn btn-light" href="{% url 'notes_export_excel' %}?ue_id={{ selected_ue }}&niveau_id={{ selected_niveau }}"><i class="fas fa-download"></i> Exporter</a>
+    {% endif %}
+  </div>
+</form>
+
+<!-- AJAX cascade script -->
+<script src="{% static 'notes/js/etudiants_filters.js' %}"></script>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Nom</th>
+      <th>Matricule</th>
+      {% if selected_ue %}<th>Note (final)</th>{% endif %}
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% if rows %}
+    {% for row in rows %}
+      <tr>
+        <td>{{ row.etudiant.nom }}</td>
+        <td>{{ row.etudiant.matricule }}</td>
+        {% if selected_ue %}
+          {% if row.note_final is not None %}
+            <td>{{ row.note_final|floatformat:2 }}</td>
+          {% else %}
+            <td>—</td>
+          {% endif %}
+        {% endif %}
+        <td>
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'moyenne' row.etudiant.id %}?next={{ current_path|urlencode }}">Moyenne</a>
+        </td>
+      </tr>
+    {% endfor %}
+  {% else %}
+    <tr><td colspan="4">Aucun étudiant</td></tr>
+  {% endif %}
+  </tbody>
+</table>
+
+<nav aria-label="Page navigation">
+  <ul class="pagination">
+    {% if students_page.has_previous %}
+      <li class="page-item"><a class="page-link" href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ students_page.previous_page_number }}">&laquo; Précédent</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">&laquo; Précédent</span></li>
+    {% endif %}
+
+    <li class="page-item disabled"><span class="page-link">Page {{ students_page.number }} / {{ students_page.paginator.num_pages }}</span></li>
+
+    {% if students_page.has_next %}
+      <li class="page-item"><a class="page-link" href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ students_page.next_page_number }}">Suivant &raquo;</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Suivant &raquo;</span></li>
+    {% endif %}
+  </ul>
+</nav>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="importModalLabel">Importer les notes</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted"><small>Fichier Excel attendu: colonnes <b>Nom, Matricule, CC, TP, SN</b></small></p>
+        <form id="importForm">
+          <div class="mb-3">
+            <label for="fileInput" class="form-label">Sélectionner un fichier Excel</label>
+            <input type="file" class="form-control" id="fileInput" name="file" accept=".xlsx,.xls" required>
+          </div>
+        </form>
+        <div id="importResult"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+        <button type="button" class="btn btn-primary" id="uploadBtn">Importer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('uploadBtn').addEventListener('click', function() {
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+  const ueId = document.getElementById('ue-select').value;
+  
+  if (!file) {
+    alert('Veuillez sélectionner un fichier');
+    return;
+  }
+  
+  if (!ueId) {
+    alert('Veuillez sélectionner une UE');
+    return;
+  }
+  
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('ue_id', ueId);
+  
+  const uploadBtn = document.getElementById('uploadBtn');
+  uploadBtn.disabled = true;
+  uploadBtn.textContent = 'Importation en cours...';
+  
+  fetch('{% url "notes_import_excel" %}', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    const resultDiv = document.getElementById('importResult');
+    if (data.success) {
+      let html = `<div class="alert alert-success">
+        <strong>Importation réussie!</strong><br>
+        <small>Importés: ${data.imported} | Mis à jour: ${data.updated}</small>`;
+      
+      if (data.errors.length > 0) {
+        html += `<br><strong>Erreurs:</strong><ul>`;
+        data.errors.forEach(err => {
+          html += `<li><small>${err}</small></li>`;
+        });
+        html += `</ul>`;
+      }
+      html += `<br><small class="text-muted">Rechargement dans <span id="countdown">6</span>s...</small></div>`;
+      resultDiv.innerHTML = html;
+      
+      // Reset input
+      fileInput.value = '';
+      
+      // Countdown and reload page after 6 seconds
+      let seconds = 6;
+      const countdownInterval = setInterval(() => {
+        seconds--;
+        const countdownEl = document.getElementById('countdown');
+        if (countdownEl) countdownEl.textContent = seconds;
+        if (seconds <= 0) {
+          clearInterval(countdownInterval);
+          location.reload();
+        }
+      }, 1000);
+    } else {
+      resultDiv.innerHTML = `<div class="alert alert-danger"><strong>Erreur:</strong> ${data.error}</div>`;
+    }
+    
+    uploadBtn.disabled = false;
+    uploadBtn.textContent = 'Importer';
+  })
+  .catch(error => {
+    document.getElementById('importResult').innerHTML = `<div class="alert alert-danger"><strong>Erreur:</strong> ${error.message}</div>`;
+    uploadBtn.disabled = false;
+    uploadBtn.textContent = 'Importer';
+  });
+});
+</script>
+{% endblock %}

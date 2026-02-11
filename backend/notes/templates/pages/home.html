@@ -1,0 +1,132 @@
+{% extends "pages/base.html" %}
+{% block title %}Accueil - Gestion des notes{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <div class="container">
+    <h1 class="mb-2"><i class="fas fa-graduation-cap"></i> Gestion des notes</h1>
+    <p class="lead mb-0">Plateforme centralisée pour gérer les étudiants, les UE et les notes par semestre.</p>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Statistics Cards -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3">
+      <div class="stat-card">
+        <div class="stat-card-icon"><i class="fas fa-university"></i></div>
+        <div class="stat-card-value">{{ stats.departements }}</div>
+        <div class="stat-card-label">Départements</div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="stat-card">
+        <div class="stat-card-icon"><i class="fas fa-sitemap"></i></div>
+        <div class="stat-card-value">{{ stats.filieres }}</div>
+        <div class="stat-card-label">Filières</div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="stat-card">
+        <div class="stat-card-icon"><i class="fas fa-layer-group"></i></div>
+        <div class="stat-card-value">{{ stats.niveaux }}</div>
+        <div class="stat-card-label">Niveaux</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3">
+      <div class="stat-card">
+        <div class="stat-card-icon"><i class="fas fa-book"></i></div>
+        <div class="stat-card-value">{{ stats.ues }}</div>
+        <div class="stat-card-label">Unités d'Enseignement</div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="stat-card">
+        <div class="stat-card-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-card-value">{{ stats.etudiants }}</div>
+        <div class="stat-card-label">Étudiants</div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="stat-card">
+        <div class="stat-card-icon"><i class="fas fa-tasks"></i></div>
+        <div class="stat-card-value">{{ recent_notes|length }}</div>
+        <div class="stat-card-label">Dernières notes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Links & Recent Notes Section -->
+  <div class="row g-4">
+    <!-- Quick Links Card -->
+    <div class="col-lg-6">
+      <div class="card shadow-lg border-0 h-100">
+        <div class="card-header bg-gradient text-white border-0 py-3">
+          <h5 class="mb-0"><i class="fas fa-rocket"></i> Actions rapides</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-12">
+              <a href="{% url 'etudiants_list' %}" class="btn btn-gradient w-100 text-white py-2">
+                <i class="fas fa-users"></i> Voir les étudiants
+              </a>
+            </div>
+            <div class="col-12">
+              <a href="{% url 'tableau_notes' %}" class="btn btn-gradient w-100 text-white py-2">
+                <i class="fas fa-table"></i> Tableau des notes
+              </a>
+            </div>
+            {% if user.is_staff %}
+              <div class="col-12">
+                <a href="{% url 'admin:index' %}" class="btn btn-gradient w-100 text-white py-2">
+                  <i class="fas fa-cog"></i> Panneau d'administration
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Notes Card -->
+    <div class="col-lg-6">
+      <div class="card shadow-lg border-0 h-100">
+        <div class="card-header bg-gradient text-white border-0 py-3">
+          <h5 class="mb-0"><i class="fas fa-history"></i> Dernières notes</h5>
+        </div>
+        <div class="card-body p-0">
+          {% if recent_notes %}
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th><small>Étudiant</small></th>
+                    <th><small>UE</small></th>
+                    <th class="text-center"><small>Final</small></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for note in recent_notes %}
+                    <tr>
+                      <td><small>{{ note.etudiant.nom }}</small></td>
+                      <td><small>{{ note.ue.code }}</small></td>
+                      <td class="text-center"><small>{% if note.final %}<strong class="text-primary">{{ note.final|floatformat:2 }}</strong>{% else %}<span class="text-danger">—</span>{% endif %}</small></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="p-3 text-center text-muted">
+              <p class="mb-0"><small>Aucune note récente</small></p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

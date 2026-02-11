@@ -1,0 +1,134 @@
+{% extends "pages/base_adminlte.html" %}
+
+{% block title %}Accueil - Gestion des notes{% endblock %}
+
+{% block breadcrumb_active %}Accueil{% endblock %}
+
+{% block content %}
+
+<!-- Quick Actions -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-rocket"></i> Actions rapides</h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-12 col-md-4">
+            <a href="{% url 'etudiants_list' %}" class="btn btn-primary w-100 mb-2">
+              <i class="fas fa-users"></i> Voir les etudiants
+            </a>
+          </div>
+          <div class="col-12 col-md-4">
+            <a href="{% url 'tableau_notes' %}" class="btn btn-primary w-100 mb-2">
+              <i class="fas fa-table"></i> Tableau des notes
+            </a>
+          </div>
+          {% if user.is_staff %}
+          <div class="col-12 col-md-4">
+            <a href="{% url 'admin:index' %}" class="btn btn-primary w-100 mb-2">
+              <i class="fas fa-cog"></i> Panneau d'administration
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main row -->
+<div class="row">
+  <!-- Statistiques -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-chart-bar"></i> Statistiques</h3>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover">
+            <thead>
+              <tr>
+                <th>Catégorie</th>
+                <th class="text-right">Nombre</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><i class="fas fa-university text-info"></i> Départements</td>
+                <td class="text-right">{{ stats.departements }}</td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-sitemap text-success"></i> Filières</td>
+                <td class="text-right">{{ stats.filieres }}</td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-layer-group text-warning"></i> Niveaux</td>
+                <td class="text-right">{{ stats.niveaux }}</td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-users text-danger"></i> Étudiants</td>
+                <td class="text-right">{{ stats.etudiants }}</td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-book text-primary"></i> Unités d'Enseignement</td>
+                <td class="text-right">{{ stats.ues }}</td>
+              </tr>
+              <tr>
+                <td><i class="fas fa-history text-info"></i> Dernières notes</td>
+                <td class="text-right">{{ recent_notes|length }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Notes -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-clock"></i> Dernières notes</h3>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_notes %}
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover">
+            <thead>
+              <tr>
+                <th>Étudiant</th>
+                <th>UE</th>
+                <th class="text-right">Final</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for note in recent_notes %}
+              <tr>
+                <td>{{ note.etudiant.nom }}</td>
+                <td>{{ note.ue.code }}</td>
+                <td class="text-right">
+                  {% if note.final %}
+                    <span class="badge badge-success">{{ note.final|floatformat:2 }}</span>
+                  {% else %}
+                    <span class="badge badge-secondary">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="p-3 text-center text-muted">
+          <p class="mb-0">Aucune note récente</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
